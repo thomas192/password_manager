@@ -1,6 +1,7 @@
+use serde::{Serialize, Deserialize};
 use rand::Rng;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Service {
     pub name: String,
     pub email: String,
