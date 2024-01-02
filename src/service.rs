@@ -3,10 +3,10 @@ use rand::Rng;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Service {
-    pub name: String,
-    pub email: String,
-    pub username: Option<String>,
-    pub password: String,
+    name: String,
+    email: String,
+    username: Option<String>,
+    password: String,
 }
 
 impl Service {
@@ -35,6 +35,22 @@ impl Service {
                                 })
                                 .collect();
         password
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn email(&self) -> &str {
+        &self.email
+    }
+
+    pub fn username(&self) -> Option<&str> {
+        self.username.as_ref().map(|s| s.as_str())
+    }
+
+    pub fn password(&self) -> &str {
+        &self.password
     }
 }
 

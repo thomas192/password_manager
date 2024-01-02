@@ -14,7 +14,7 @@ pub struct Services {
 }
 
 impl Services {
-    pub fn new(list: Vec<Service>) -> Services {
+    fn new(list: Vec<Service>) -> Services {
         Services { list }
     }
 
@@ -24,6 +24,21 @@ impl Services {
 
     fn from_json(json_string: &str) -> Result<Self, serde_json::Error> {
         serde_json::from_str(json_string)
+    }
+
+    pub fn add_service(
+        &mut self,
+        name: String, 
+        email: String, 
+        username: Option<String>
+    ) -> Result<(), &'static str> {
+        for s in &self.list {
+            if &name == s.name() {
+                return Err("Service with same name already exists")
+            }
+        }
+        self.list.push(Service::new(name, email, username));
+        Ok(())
     }
 
     pub fn store(&self) -> Result<(), Box<dyn Error>> {
@@ -57,7 +72,27 @@ mod test {
         let services = Services::new(vec![s1]);
         let _ = services.store();
 
-        let loaded_services = Services::load().unwrap();
-        assert_eq!(services, loaded_services);
+        assert_eq!(services, Services::load().unwrap());
+    }
+
+    #[test]
+    fn test_add_service() {
+        let _ = std::fs::remove_file("vault.json");
+
+        let mut services = Services::load().unwrap();
+        let _ = services.add_service("Gmail".into(), "toto@gmail.com".into(), None);
+
+        assert!(services.list.iter().any(|service| service.name() == "Gmail"));
+    }
+
+    #[test]
+    fn test_add_same_service() {
+        let _ = std::fs::remove_file("vault.json");
+
+        let mut services = Services::load().unwrap();
+        let _ = services.add_service("Gmail".into(), "toto@gmail.com".into(), None);
+        let res = services.add_service("Gmail".into(), "tata@gmail.com".into(), None);
+
+        assert!(res.is_err());
     }
 }
