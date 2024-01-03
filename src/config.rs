@@ -8,14 +8,13 @@ pub enum Config {
 impl Config {
     pub fn build(args: &[String]) -> Result<Config, &str> {
         if args.len() < 2 {
-            return Err("not enough arguments: specify command");
+            return Err("not enough arguments, specify command");
         }
         let command = args[1].as_str();
         match command {
             "add" => {
                 if args.len() < 4 {
-                    return Err("not enough arguments for command add: \
-specify name, email and username if any");
+                    return Err("not enough arguments for command add");
                 }
                 Ok(Config::Add {
                     name: args[2].clone(),
@@ -25,8 +24,7 @@ specify name, email and username if any");
             },
             "search" => {
                 if args.len() < 3 {
-                    return Err("not enough arguments for command search: \
-specify name");
+                    return Err("not enough arguments for command search");
                 }
                 Ok(Config::Search {
                     name: args[2].clone(),
@@ -34,8 +32,7 @@ specify name");
             },
             "remove" => {
                 if args.len() < 3 {
-                    return Err("not enough arguments for command remove: \
-specify name");
+                    return Err("not enough arguments for command remove");
                 }
                 Ok(Config::Remove {
                     name: args[2].clone(),

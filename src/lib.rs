@@ -7,9 +7,11 @@ use std::error::Error;
 
 mod service;
 use service::Service;
+pub mod config;
+use config::Config;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
-pub struct Services {
+struct Services {
     list: Vec<Service>,
 }
 
@@ -26,7 +28,7 @@ impl Services {
         serde_json::from_str(json_string)
     }
 
-    fn add_service(
+    fn add(
         &mut self,
         name: String, 
         email: String, 
@@ -62,6 +64,24 @@ impl Services {
     }
 }
 
+pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
+    match config {
+        Config::Add { name, email, username } => {
+            let mut services = Services::load()?;
+            services.add(name, email, username)?;
+            services.store()?;
+            println!("service added successfully");
+            Ok(())
+        },
+        Config::Search { name } => {
+            Ok(())
+        },
+        Config::Remove { name } => {
+            Ok(())
+        },
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -76,11 +96,11 @@ mod test {
     }
 
     #[test]
-    fn test_add_service() {
+    fn test_add() {
         let _ = std::fs::remove_file("vault.json");
 
         let mut services = Services::load().unwrap();
-        let _ = services.add_service("gmail".into(), "toto@gmail.com".into(), None);
+        let _ = services.add("gmail".into(), "toto@gmail.com".into(), None);
 
         assert!(services.list.iter().any(|service| service.name() == "Gmail"));
     }
@@ -90,8 +110,8 @@ mod test {
         let _ = std::fs::remove_file("vault.json");
 
         let mut services = Services::load().unwrap();
-        let _ = services.add_service("gmail".into(), "toto@gmail.com".into(), None);
-        let res = services.add_service("gmail".into(), "tata@gmail.com".into(), None);
+        let _ = services.add("gmail".into(), "toto@gmail.com".into(), None);
+        let res = services.add("gmail".into(), "tata@gmail.com".into(), None);
 
         assert!(res.is_err());
     }
