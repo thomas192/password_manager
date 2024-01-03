@@ -26,7 +26,7 @@ impl Services {
         serde_json::from_str(json_string)
     }
 
-    pub fn add_service(
+    fn add_service(
         &mut self,
         name: String, 
         email: String, 
@@ -34,20 +34,20 @@ impl Services {
     ) -> Result<(), &'static str> {
         for s in &self.list {
             if &name == s.name() {
-                return Err("Service with same name already exists")
+                return Err("service with same name already exists")
             }
         }
         self.list.push(Service::new(name, email, username));
         Ok(())
     }
 
-    pub fn store(&self) -> Result<(), Box<dyn Error>> {
+    fn store(&self) -> Result<(), Box<dyn Error>> {
         let mut file = File::create("vault.json")?;
         file.write_all(self.to_json()?.as_bytes())?;
         Ok(())
     }
 
-    pub fn load() -> Result<Self, Box<dyn Error>> {
+    fn load() -> Result<Self, Box<dyn Error>> {
         let path = Path::new("vault.json");
 
         if !path.exists() {
@@ -68,7 +68,7 @@ mod test {
 
     #[test]
     fn test_store_and_load() {
-        let s1 = Service::new("Gmail".into(), "toto@gmail.com".into(), None);
+        let s1 = Service::new("gmail".into(), "toto@gmail.com".into(), None);
         let services = Services::new(vec![s1]);
         let _ = services.store();
 
@@ -80,7 +80,7 @@ mod test {
         let _ = std::fs::remove_file("vault.json");
 
         let mut services = Services::load().unwrap();
-        let _ = services.add_service("Gmail".into(), "toto@gmail.com".into(), None);
+        let _ = services.add_service("gmail".into(), "toto@gmail.com".into(), None);
 
         assert!(services.list.iter().any(|service| service.name() == "Gmail"));
     }
@@ -90,8 +90,8 @@ mod test {
         let _ = std::fs::remove_file("vault.json");
 
         let mut services = Services::load().unwrap();
-        let _ = services.add_service("Gmail".into(), "toto@gmail.com".into(), None);
-        let res = services.add_service("Gmail".into(), "tata@gmail.com".into(), None);
+        let _ = services.add_service("gmail".into(), "toto@gmail.com".into(), None);
+        let res = services.add_service("gmail".into(), "tata@gmail.com".into(), None);
 
         assert!(res.is_err());
     }

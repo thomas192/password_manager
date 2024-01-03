@@ -1,3 +1,16 @@
+use std::env;
+use std::process;
+
+mod config;
+use config::Config;
+
 fn main() {
-    println!("Hello, world!");
+    let args: Vec<String> = env::args().collect();
+
+    let config = Config::build(&args).unwrap_or_else(|err| {
+        eprintln!("Error {err}");
+        process::exit(1);
+    });
+
+    println!("{:?}", config);
 }
