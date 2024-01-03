@@ -1,5 +1,6 @@
 use serde::{Serialize, Deserialize};
 use rand::Rng;
+use std::fmt;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Service {
@@ -7,6 +8,16 @@ pub struct Service {
     email: String,
     username: Option<String>,
     password: String,
+}
+
+impl fmt::Display for Service {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), std::fmt::Error> {
+        write!(
+            f,
+            "Service: {}\nemail: {}\nusername: {}\npassword: {}", 
+            self.name, self.email, self.username.as_ref().unwrap_or(&"None".to_string()), self.password
+        )
+    }
 }
 
 impl Service {

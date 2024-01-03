@@ -43,19 +43,27 @@ impl Services {
         Ok(())
     }
 
-    fn remove(
-        &mut self,
-        name: &str,
-    ) -> Result<(), &'static str> {
+    fn remove(&mut self, name: &str) -> Result<(), &'static str> {
         let length = self.list.len();
         if length == 0 {
             return Err("services list is empty")
         }
         self.list.retain(|s| name != s.name());
-        if self.list.len() != length {
+        if self.list.len() == length {
             return Err("unknown service name");
         }
         Ok(())
+    }
+
+    fn search(&self, name: &str) -> Result<Vec<&Service>, &'static str> {
+        let matches: Vec<&Service> = self.list
+            .iter()
+            .filter(|s| s.name().contains(name))
+            .collect();
+        if matches.len() == 0 {
+            return Err("unknown service name");
+        }
+        Ok(matches)
     }
 
     fn store(&self) -> Result<(), Box<dyn Error>> {
@@ -89,9 +97,18 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
             Ok(())
         },
         Config::Search { name } => {
+            let services = Services::load()?;
+            let matches = services.search(&name)?;
+            for s in matches {
+                println!("{}\n", s);
+            }
             Ok(())
         },
         Config::Remove { name } => {
+            let mut services = Services::load()?;
+            services.remove(&name)?;
+            services.store()?;
+            println!("service removed successfully");
             Ok(())
         },
     }
@@ -135,5 +152,18 @@ mod test {
 
         let res = services.remove("gmail");
         assert!(res.is_err());
+    }
+
+    #[test]
+    fn test_search() {
+        let _ = std::fs::remove_file("vault.json");
+
+        let mut services = Services::load().unwrap();
+        let _ = services.add("gmail toto".into(), "toto@gmail.com".into(), None);
+        let _ = services.add("gmail tata".into(), "tata@gmail.com".into(), None);
+        let _ = services.add("mail titi".into(), "titi@mail.com".into(), None);
+
+        let res = services.search("gmail").unwrap();
+        assert_eq!(2, res.len())
     }
 }
