@@ -36,10 +36,25 @@ impl Services {
     ) -> Result<(), &'static str> {
         for s in &self.list {
             if &name == s.name() {
-                return Err("service with same name already exists")
+                return Err("service with same name already exists");
             }
         }
         self.list.push(Service::new(name, email, username));
+        Ok(())
+    }
+
+    fn remove(
+        &mut self,
+        name: &str,
+    ) -> Result<(), &'static str> {
+        let length = self.list.len();
+        if length == 0 {
+            return Err("services list is empty")
+        }
+        self.list.retain(|s| name != s.name());
+        if self.list.len() != length {
+            return Err("unknown service name");
+        }
         Ok(())
     }
 
@@ -101,18 +116,24 @@ mod test {
 
         let mut services = Services::load().unwrap();
         let _ = services.add("gmail".into(), "toto@gmail.com".into(), None);
+        assert!(services.list.iter().any(|service| service.name() == "gmail"));
 
-        assert!(services.list.iter().any(|service| service.name() == "Gmail"));
+        let res = services.add("gmail".into(), "tata@gmail.com".into(), None);
+        assert!(res.is_err());
     }
 
     #[test]
-    fn test_add_same_service() {
+    fn test_remove() {
         let _ = std::fs::remove_file("vault.json");
 
         let mut services = Services::load().unwrap();
         let _ = services.add("gmail".into(), "toto@gmail.com".into(), None);
-        let res = services.add("gmail".into(), "tata@gmail.com".into(), None);
+        assert_eq!(1, services.list.len());
 
+        let _ = services.remove("gmail");
+        assert_eq!(0, services.list.len());
+
+        let res = services.remove("gmail");
         assert!(res.is_err());
     }
 }
