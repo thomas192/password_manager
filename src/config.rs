@@ -1,5 +1,6 @@
 #[derive(Debug)]
 pub enum Config {
+    Create,
     Add { name: String, email: String, username: Option<String> },
     Search { name: String },
     Remove { name: String },
@@ -12,6 +13,9 @@ impl Config {
         }
         let command = args[1].as_str();
         match command {
+            "create" => {
+                Ok(Config::Create)
+            },
             "add" => {
                 if args.len() < 4 {
                     return Err("not enough arguments for command add");

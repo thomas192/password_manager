@@ -51,18 +51,6 @@ impl Service {
     pub fn name(&self) -> &str {
         &self.name
     }
-
-    pub fn email(&self) -> &str {
-        &self.email
-    }
-
-    pub fn username(&self) -> Option<&str> {
-        self.username.as_ref().map(|s| s.as_str())
-    }
-
-    pub fn password(&self) -> &str {
-        &self.password
-    }
 }
 
 #[cfg(test)]

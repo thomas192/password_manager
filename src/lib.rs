@@ -1,31 +1,42 @@
 use std::error::Error;
+use std::io;
 
-mod services;
-use services::Services;
+mod secure_services;
+use secure_services::SecureServices;
 pub mod config;
 use config::Config;
 
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
+    println!("Enter password: ");
+
+    let mut password = String::new();
+    io::stdin().read_line(&mut password)?;
+
     match config {
+        Config::Create => {
+            SecureServices::create(password)?;
+            println!("vault created successfully");
+            Ok(())
+        },
         Config::Add { name, email, username } => {
-            let mut services = Services::load()?;
-            services.add(name, email, username)?;
-            services.store()?;
+            let mut ss = SecureServices::load(password)?;
+            ss.services_mut().add(name, email, username)?;
+            ss.store()?;
             println!("service added successfully");
             Ok(())
         },
         Config::Search { name } => {
-            let services = Services::load()?;
-            let matches = services.search(&name)?;
+            let ss = SecureServices::load(password)?;
+            let matches = ss.services().search(&name)?;
             for s in matches {
                 println!("{}\n", s);
             }
             Ok(())
         },
         Config::Remove { name } => {
-            let mut services = Services::load()?;
-            services.remove(&name)?;
-            services.store()?;
+            let mut ss = SecureServices::load(password)?;
+            ss.services_mut().remove(&name)?;
+            ss.store()?;
             println!("service removed successfully");
             Ok(())
         },
