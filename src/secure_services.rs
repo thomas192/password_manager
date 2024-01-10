@@ -2,6 +2,8 @@ use std::path::Path;
 use std::fs::File;
 use std::io::Write;
 use aes::cipher::{block_padding::Pkcs7, BlockEncryptMut, BlockDecryptMut, KeyIvInit};
+use pbkdf2::pbkdf2_hmac;
+use sha2::Sha256;
 
 mod services;
 use services::Services;
@@ -63,9 +65,11 @@ impl SecureServices {
     }
 
     fn gen_key(password: String) -> [u8; 32] {
-        let password_bytes = password.trim().as_bytes();
+        let password = password.trim().as_bytes();
+        let salt = b"salt";
+        let n = 500_00;
         let mut key = [0u8; 32];
-        key[..password_bytes.len()].copy_from_slice(&password_bytes);
+        pbkdf2_hmac::<Sha256>(password, salt, n, &mut key);
         key
     }
 
