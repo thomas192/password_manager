@@ -1,5 +1,5 @@
 use std::error::Error;
-use std::io;
+use rpassword;
 
 mod secure_services;
 use secure_services::SecureServices;
@@ -7,10 +7,8 @@ pub mod config;
 use config::Config;
 
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
-    println!("Enter password: ");
 
-    let mut password = String::new();
-    io::stdin().read_line(&mut password)?;
+    let password = rpassword::prompt_password("Enter password: ")?;
 
     match config {
         Config::Create => {
