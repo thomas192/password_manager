@@ -1,5 +1,6 @@
 use std::error::Error;
 use rpassword;
+use zeroize::Zeroizing;
 
 mod secure_services;
 use secure_services::SecureServices;
@@ -8,7 +9,7 @@ use config::Config;
 
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 
-    let password = rpassword::prompt_password("Enter password: ")?;
+    let password = Zeroizing::new(rpassword::prompt_password("Enter password: ")?);
 
     match config {
         Config::Create => {

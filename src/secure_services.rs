@@ -4,6 +4,7 @@ use std::io::Write;
 use aes::cipher::{block_padding::Pkcs7, BlockEncryptMut, BlockDecryptMut, KeyIvInit};
 use pbkdf2::pbkdf2_hmac;
 use sha2::Sha256;
+use zeroize::Zeroizing;
 
 mod services;
 use services::Services;
@@ -17,18 +18,18 @@ static VAULT_PATH: &str = "vault";
 
 pub struct SecureServices {
     services: Services,
-    key: [u8; 32],
+    key: Zeroizing<[u8; 32]>,
 }
 
 impl SecureServices {
-    pub fn create(password: String) -> Result<(), SecureServiceError> {
+    pub fn create(password: Zeroizing<String>) -> Result<(), SecureServiceError> {
         SecureServices { 
             services: Services::new(vec![]),
             key: SecureServices::gen_key(password),
         }.store()
     }
     
-    pub fn load(password: String) -> Result<Self, SecureServiceError> {
+    pub fn load(password: Zeroizing<String>) -> Result<Self, SecureServiceError> {
         let path = Path::new(VAULT_PATH);
         if !path.exists() {
             return Err(SecureServiceError::VaultFileNotFound);
@@ -37,7 +38,7 @@ impl SecureServices {
         let key = SecureServices::gen_key(password);
         let ciphertext = std::fs::read(&path)?;
         let mut buf = vec![0u8; ciphertext.len()];
-        let data_bytes = Aes256CbcDec::new_from_slices(&key, &[0u8; 16]).unwrap()
+        let data_bytes = Aes256CbcDec::new_from_slices(&*key, &[0u8; 16]).unwrap()
             .decrypt_padded_b2b_mut::<Pkcs7>(&ciphertext, &mut buf)?;
 
         let data_json = String::from_utf8(data_bytes.to_vec())?;
@@ -55,7 +56,7 @@ impl SecureServices {
 
         let buf_len = data_bytes.len() + 32;
         let mut buf = vec![0u8; buf_len];
-        let ciphertext = Aes256CbcEnc::new_from_slices(&self.key, &[0u8; 16]).unwrap()
+        let ciphertext = Aes256CbcEnc::new_from_slices(&*self.key, &[0u8; 16]).unwrap()
             .encrypt_padded_b2b_mut::<Pkcs7>(&data_bytes, &mut buf).unwrap();
 
         let mut file = File::create(VAULT_PATH)?;
@@ -64,13 +65,13 @@ impl SecureServices {
         Ok(())
     }
 
-    fn gen_key(password: String) -> [u8; 32] {
-        let password = password.trim().as_bytes();
+    fn gen_key(password: Zeroizing<String>) -> Zeroizing<[u8; 32]> {
+        let password_bytes = password.trim().as_bytes();
         let salt = b"salt";
         let n = 500_00;
         let mut key = [0u8; 32];
-        pbkdf2_hmac::<Sha256>(password, salt, n, &mut key);
-        key
+        pbkdf2_hmac::<Sha256>(password_bytes, salt, n, &mut key);
+        Zeroizing::new(key)
     }
 
     pub fn services(&self) -> &Services {
@@ -90,12 +91,12 @@ mod test {
     fn test_create_and_load() {
         let _ = std::fs::remove_file("vault");
 
-        let res = SecureServices::load("azerty123".into());
+        let res = SecureServices::load(Zeroizing::new(String::from("azerty123")));
         assert!(matches!(res, Err(SecureServiceError::VaultFileNotFound)));
 
-        let _ = SecureServices::create("azerty123".into());
+        let _ = SecureServices::create(Zeroizing::new(String::from("azerty123")));
 
-        let secure_services = SecureServices::load("azerty123".into()).unwrap();
+        let secure_services = SecureServices::load(Zeroizing::new(String::from("azerty123"))).unwrap();
         assert_eq!(secure_services.services, Services::new(vec![]));
     }
 }
