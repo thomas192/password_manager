@@ -7,39 +7,47 @@ pub enum Config {
 }
 
 impl Config {
-    pub fn build(args: &[String]) -> Result<Config, &str> {
-        if args.len() < 2 {
-            return Err("not enough arguments, specify command");
+    pub fn build(
+        mut args: impl Iterator<Item = String>,
+    ) -> Result<Config, &'static str> {
+        args.next();
+
+        let command = match args.next() {
+            Some(arg) => arg,
+            None => return Err("not enough arguments, specify command"),
+        };
+
+        let command = command.as_str();
+        
+        if command == "create" {
+            return Ok(Config::Create);
         }
-        let command = args[1].as_str();
+
+        let name = match args.next() {
+            Some(arg) => arg,
+            None => return Err("not enough arguments, service name required"),
+        };
+
         match command {
-            "create" => {
-                Ok(Config::Create)
-            },
             "add" => {
-                if args.len() < 4 {
-                    return Err("not enough arguments for command add");
-                }
+                let email = match args.next() {
+                    Some(arg) => arg,
+                    None => return Err("not enough arguments for command add, email required")
+                };
                 Ok(Config::Add {
-                    name: args[2].clone(),
-                    email: args[3].clone(),
-                    username: args.get(4).cloned(),
+                    name: name,
+                    email: email,
+                    username: args.next(),
                 })
             },
             "search" => {
-                if args.len() < 3 {
-                    return Err("not enough arguments for command search");
-                }
                 Ok(Config::Search {
-                    name: args[2].clone(),
+                    name: name,
                 })
             },
             "remove" => {
-                if args.len() < 3 {
-                    return Err("not enough arguments for command remove");
-                }
                 Ok(Config::Remove {
-                    name: args[2].clone(),
+                    name: name,
                 })
             },
             _ => Err("unknown command"),
