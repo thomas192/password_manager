@@ -12,8 +12,9 @@ Usage :
 - pwdm add "tom's mail" "tom@mail"
 - pwdm add "tom's 2nd mail" "tom2@mail.com" "tom123"
 - pwdm search "mail"
+Output :
 ```
-  Service: tom's mail
+Service: tom's mail
 email: tom@mail.com
 username: None
 password: O&foVssBbblQbq%RLags
